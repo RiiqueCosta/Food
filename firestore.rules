@@ -1,12 +1,13 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Default deny
+    
+    // 1. SEGURANÇA GLOBAL: Negar tudo por padrão
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // Helper functions
+    // --- FUNÇÕES AUXILIARES ---
     function isSignedIn() {
       return request.auth != null;
     }
@@ -19,30 +20,53 @@ service cloud.firestore {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
-    // Restaurants
-    match /restaurants/{restaurantId} {
-      allow read: if true; // Publicly accessible to see menu
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid && request.resource.data.ownerId == request.auth.uid;
+    // --- COLEÇÕES ---
+
+    // Perfil de Usuário Individual (Dados privados do Admin)
+    match /users/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
 
-    // Categories
+    // Restaurantes
+    match /restaurants/{restaurantId} {
+      // Leitura pública para que os clientes vejam o cardápio
+      allow read: if true; 
+      
+      // Criação: Usuário deve estar logado e ser o dono
+      allow create: if isSignedIn() 
+                    && request.resource.data.ownerId == request.auth.uid
+                    && isValidId(restaurantId);
+      
+      // Update: Somente o dono atual pode alterar seus dados
+      allow update: if isSignedIn() 
+                    && resource.data.ownerId == request.auth.uid 
+                    && request.resource.data.ownerId == request.auth.uid;
+    }
+
+    // Categorias e Produtos (Dentro do sub-caminho do restaurante)
     match /restaurants/{restaurantId}/categories/{categoryId} {
       allow read: if true;
       allow write: if isOwner(restaurantId);
     }
 
-    // Products
     match /restaurants/{restaurantId}/products/{productId} {
       allow read: if true;
       allow write: if isOwner(restaurantId);
     }
 
-    // Orders
+    // Pedidos (Extremamente Crítico)
     match /restaurants/{restaurantId}/orders/{orderId} {
+      // Somente o dono do restaurante pode ver a lista de pedidos e detalhes
       allow read: if isOwner(restaurantId);
-      allow create: if true; // Customers can create orders
+      
+      // Clientes podem criar pedidos e enviar via WhatsApp
+      allow create: if true; 
+      
+      // Somente o dono pode atualizar status (ex: de 'pendente' para 'preparando')
       allow update: if isOwner(restaurantId);
+      
+      // Geralmente pedidos não são deletados, apenas cancelados (status update)
+      allow delete: if false; 
     }
   }
 }
