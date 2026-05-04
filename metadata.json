@@ -1,0 +1,6 @@
+{
+  "name": "FoodSaaS - Cardápio Digital Profissional",
+  "description": "Plataforma SaaS de cardápio digital com pedidos em tempo real, painel administrativo multi-tenant e integração com WhatsApp.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

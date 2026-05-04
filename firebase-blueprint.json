@@ -1,0 +1,118 @@
+{
+  "entities": {
+    "Restaurant": {
+      "title": "Restaurant",
+      "description": "Store configuration and metadata.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "bannerUrl": { "type": "string" },
+        "whatsapp": { "type": "string" },
+        "themeColor": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "active": { "type": "boolean" },
+        "config": {
+          "type": "object",
+          "properties": {
+            "allowPickup": { "type": "boolean" },
+            "allowTable": { "type": "boolean" },
+            "automaticPrinting": { "type": "boolean" }
+          }
+        },
+        "plan": { "type": "string", "enum": ["free", "basic", "premium"] }
+      },
+      "required": ["name", "slug", "ownerId"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Product categories for a restaurant.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "order": { "type": "number" },
+        "restaurantId": { "type": "string" }
+      },
+      "required": ["name", "restaurantId"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Menu items.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "imageUrl": { "type": "string" },
+        "categoryId": { "type": "string" },
+        "restaurantId": { "type": "string" },
+        "available": { "type": "boolean" },
+        "extras": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "price": { "type": "number" }
+            }
+          }
+        }
+      },
+      "required": ["name", "price", "categoryId", "restaurantId"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer orders.",
+      "type": "object",
+      "properties": {
+        "restaurantId": { "type": "string" },
+        "customer": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "phone": { "type": "string" },
+            "table": { "type": "string" }
+          }
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": { "type": "string" },
+              "name": { "type": "string" },
+              "quantity": { "type": "number" },
+              "price": { "type": "number" },
+              "extras": { "type": "array" },
+              "observations": { "type": "string" }
+            }
+          }
+        },
+        "total": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "preparing", "ready", "finished", "canceled"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "type": { "type": "string", "enum": ["pickup", "table"] }
+      },
+      "required": ["restaurantId", "items", "total", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/restaurants/{restaurantId}": {
+      "schema": "Restaurant",
+      "description": "Main restaurant data."
+    },
+    "/restaurants/{restaurantId}/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Categories belonging to a restaurant."
+    },
+    "/restaurants/{restaurantId}/products/{productId}": {
+      "schema": "Product",
+      "description": "Products belonging to a restaurant."
+    },
+    "/restaurants/{restaurantId}/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Orders for a restaurant."
+    }
+  }
+}

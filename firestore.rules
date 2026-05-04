@@ -1,0 +1,48 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(restaurantId) {
+      return isSignedIn() && get(/databases/$(database)/documents/restaurants/$(restaurantId)).data.ownerId == request.auth.uid;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Restaurants
+    match /restaurants/{restaurantId} {
+      allow read: if true; // Publicly accessible to see menu
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid && request.resource.data.ownerId == request.auth.uid;
+    }
+
+    // Categories
+    match /restaurants/{restaurantId}/categories/{categoryId} {
+      allow read: if true;
+      allow write: if isOwner(restaurantId);
+    }
+
+    // Products
+    match /restaurants/{restaurantId}/products/{productId} {
+      allow read: if true;
+      allow write: if isOwner(restaurantId);
+    }
+
+    // Orders
+    match /restaurants/{restaurantId}/orders/{orderId} {
+      allow read: if isOwner(restaurantId);
+      allow create: if true; // Customers can create orders
+      allow update: if isOwner(restaurantId);
+    }
+  }
+}
