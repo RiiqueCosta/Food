@@ -65,15 +65,26 @@ function CustomerMenu() {
   }, [slug]);
 
   const handleCheckout = async () => {
-    if (!restaurant || !customerInfo.name || !customerInfo.phone) return;
+    if (!restaurant || !customerInfo.name || !customerInfo.phone || items.length === 0) return;
     setOrderSending(true);
 
     try {
       const orderData = {
         restaurantId: restaurant.id,
-        customer: customerInfo,
-        items,
-        total,
+        customer: {
+          name: (customerInfo.name || "").trim(),
+          phone: (customerInfo.phone || "").trim(),
+          type: customerInfo.type,
+          ...(customerInfo.type === 'table' ? { table: customerInfo.table || "" } : {})
+        },
+        items: items.map(item => ({
+          productId: item.productId || "",
+          name: item.name || "",
+          quantity: item.quantity || 1,
+          price: item.price || 0,
+          observations: item.observations || ""
+        })),
+        total: total || 0,
         status: 'pending',
         type: customerInfo.type,
         createdAt: serverTimestamp()

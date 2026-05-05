@@ -29,7 +29,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         name: product.name, 
         quantity, 
         price: product.price,
-        observations 
+        observations: observations || ""
       }];
     });
   };
