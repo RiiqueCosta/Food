@@ -40,14 +40,14 @@ export default function AdminSettings() {
           <div>
             <label className="text-sm font-medium mb-1 block">Nome Público</label>
             <Input 
-              value={formData.name} 
+              value={formData.name || ''} 
               onChange={e => setFormData({ ...formData, name: e.target.value })} 
             />
           </div>
           <div>
             <label className="text-sm font-medium mb-1 block">Slug (URL)</label>
             <Input 
-              value={formData.slug} 
+              value={formData.slug || ''} 
               disabled 
               className="bg-gray-50 opacity-50"
             />
@@ -55,7 +55,7 @@ export default function AdminSettings() {
           <div>
             <label className="text-sm font-medium mb-1 block">WhatsApp (Somente números)</label>
             <Input 
-              value={formData.whatsapp} 
+              value={formData.whatsapp || ''} 
               onChange={e => setFormData({ ...formData, whatsapp: e.target.value })} 
             />
           </div>
@@ -63,7 +63,7 @@ export default function AdminSettings() {
             <label className="text-sm font-medium mb-1 block">URL da Logo</label>
             <Input 
               placeholder="https://..." 
-              value={formData.logoUrl} 
+              value={formData.logoUrl || ''} 
               onChange={e => setFormData({ ...formData, logoUrl: e.target.value })} 
             />
           </div>
@@ -106,7 +106,7 @@ export default function AdminSettings() {
             <input 
               type="checkbox" 
               className="w-5 h-5 accent-[#EA1D2C]" 
-              checked={formData.config?.automaticPrinting}
+              checked={!!formData.config?.automaticPrinting}
               onChange={e => setFormData({ ...formData, config: { ...formData.config, automaticPrinting: e.target.checked } })}
             />
             <div>

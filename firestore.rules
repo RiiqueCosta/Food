@@ -20,30 +20,51 @@ service cloud.firestore {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- VALIDAÇÕES DE ENTIDADES ---
+
+    function isValidOrder(data) {
+      return data.restaurantId is string &&
+             data.total is number &&
+             data.status in ['pending', 'preparing', 'ready', 'finished', 'canceled'] &&
+             data.type in ['pickup', 'table'] &&
+             data.customer.name is string &&
+             data.customer.name.size() <= 100 &&
+             data.customer.phone is string &&
+             data.customer.phone.size() <= 20 &&
+             data.items is list &&
+             data.items.size() > 0 &&
+             data.createdAt == request.time;
+    }
+
     // --- COLEÇÕES ---
 
-    // Perfil de Usuário Individual (Dados privados do Admin)
+    // Perfil de Usuário Individual
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
 
     // Restaurantes
     match /restaurants/{restaurantId} {
-      // Leitura pública para que os clientes vejam o cardápio
       allow read: if true; 
       
-      // Criação: Usuário deve estar logado e ser o dono
       allow create: if isSignedIn() 
-                    && request.resource.data.ownerId == request.auth.uid
+                    && incoming().ownerId == request.auth.uid
                     && isValidId(restaurantId);
       
-      // Update: Somente o dono atual pode alterar seus dados
       allow update: if isSignedIn() 
-                    && resource.data.ownerId == request.auth.uid 
-                    && request.resource.data.ownerId == request.auth.uid;
+                    && existing().ownerId == request.auth.uid 
+                    && incoming().ownerId == request.auth.uid;
     }
 
-    // Categorias e Produtos (Dentro do sub-caminho do restaurante)
+    // Categorias e Produtos
     match /restaurants/{restaurantId}/categories/{categoryId} {
       allow read: if true;
       allow write: if isOwner(restaurantId);
@@ -56,16 +77,18 @@ service cloud.firestore {
 
     // Pedidos (Extremamente Crítico)
     match /restaurants/{restaurantId}/orders/{orderId} {
-      // Somente o dono do restaurante pode ver a lista de pedidos e detalhes
+      // Somente o dono pode ver
       allow read: if isOwner(restaurantId);
       
-      // Clientes podem criar pedidos e enviar via WhatsApp
-      allow create: if true; 
+      // Qualquer um pode criar, mas validamos os dados
+      allow create: if isValidOrder(incoming()) && incoming().restaurantId == restaurantId;
       
-      // Somente o dono pode atualizar status (ex: de 'pendente' para 'preparando')
-      allow update: if isOwner(restaurantId);
+      // Somente o dono pode atualizar o status
+      allow update: if isOwner(restaurantId) && 
+                    incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']) &&
+                    incoming().status in ['pending', 'preparing', 'ready', 'finished', 'canceled'] &&
+                    incoming().updatedAt == request.time;
       
-      // Geralmente pedidos não são deletados, apenas cancelados (status update)
       allow delete: if false; 
     }
   }

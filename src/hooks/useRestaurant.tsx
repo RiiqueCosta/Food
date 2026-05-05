@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { collection, query, where, getDocs, addDoc, onSnapshot, doc } from 'firebase/firestore';
+import { collection, query, where, addDoc, onSnapshot } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from '../lib/firebase';
 import { Restaurant } from '../types';
 
@@ -16,24 +17,32 @@ export function RestaurantProvider({ children }: { children: React.ReactNode }) 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!auth.currentUser) return;
-
-    const q = query(
-      collection(db, 'restaurants'),
-      where('ownerId', '==', auth.currentUser.uid)
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (!snapshot.empty) {
-        const doc = snapshot.docs[0];
-        setRestaurant({ id: doc.id, ...doc.data() } as Restaurant);
-      } else {
+    const unsubAuth = onAuthStateChanged(auth, (user) => {
+      if (!user) {
         setRestaurant(null);
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      const q = query(
+        collection(db, 'restaurants'),
+        where('ownerId', '==', user.uid)
+      );
+
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        if (!snapshot.empty) {
+          const doc = snapshot.docs[0];
+          setRestaurant({ id: doc.id, ...doc.data() } as Restaurant);
+        } else {
+          setRestaurant(null);
+        }
+        setLoading(false);
+      });
+
+      return () => unsubscribe();
     });
 
-    return unsubscribe;
+    return () => unsubAuth();
   }, []);
 
   const createRestaurant = async (data: Partial<Restaurant>) => {

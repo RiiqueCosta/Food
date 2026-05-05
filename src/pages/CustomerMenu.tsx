@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { db } from '../lib/firebase';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { collection, query, where, getDocs, onSnapshot, orderBy, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Restaurant, Category, Product } from '../types';
 import { useCart, CartProvider } from '../hooks/useCart';
@@ -79,7 +79,12 @@ function CustomerMenu() {
         createdAt: serverTimestamp()
       };
 
-      await addDoc(collection(db, 'restaurants', restaurant.id, 'orders'), orderData);
+      const path = `restaurants/${restaurant.id}/orders`;
+      try {
+        await addDoc(collection(db, path), orderData);
+      } catch (e) {
+        handleFirestoreError(e, OperationType.WRITE, path);
+      }
       
       // WhatsApp Message Formatting
       const itemsText = items.map(i => `${i.quantity}x ${i.name}${i.observations ? `\n(Obs: ${i.observations})` : ''}`).join('\n');

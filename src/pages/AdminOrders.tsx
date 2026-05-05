@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRestaurant } from '../hooks/useRestaurant';
-import { db } from '../lib/firebase';
-import { collection, onSnapshot, query, orderBy, updateDoc, doc } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { collection, onSnapshot, query, orderBy, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { Order } from '../types';
 import { Button } from '../components/ui/Button';
 import { 
@@ -54,7 +54,15 @@ export default function AdminOrders() {
 
   const updateStatus = async (orderId: string, status: Order['status']) => {
     if (!restaurant) return;
-    await updateDoc(doc(db, 'restaurants', restaurant.id, 'orders', orderId), { status });
+    const path = `restaurants/${restaurant.id}/orders/${orderId}`;
+    try {
+      await updateDoc(doc(db, path), { 
+        status,
+        updatedAt: serverTimestamp()
+      });
+    } catch (e) {
+      handleFirestoreError(e, OperationType.UPDATE, path);
+    }
   };
 
   const filteredOrders = filter === 'all' 
