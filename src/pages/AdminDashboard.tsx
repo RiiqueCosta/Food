@@ -2,16 +2,26 @@ import { useRestaurant } from '../hooks/useRestaurant';
 import { useState } from 'react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Store, Plus, ClipboardList } from 'lucide-react';
+import { Store, Plus, ClipboardList, ChefHat, ExternalLink, Copy, Check } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { restaurant, loading, createRestaurant } = useRestaurant();
   const [isCreating, setIsCreating] = useState(false);
   const [newRestaurant, setNewRestaurant] = useState({ name: '', slug: '', whatsapp: '' });
+  const [copied, setCopied] = useState(false);
+
+  const kitchenUrl = `${window.location.origin}/admin/kitchen`;
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(kitchenUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   if (loading) return <div>Carregando dashboard...</div>;
 
   if (!restaurant) {
+    // ... creating restaurant view ...
     return (
       <div className="max-w-2xl mx-auto text-center py-12">
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
@@ -80,6 +90,41 @@ export default function AdminDashboard() {
             <p className="text-2xl font-bold">{stat.value}</p>
           </div>
         ))}
+      </div>
+
+      {/* Kitchen View Access */}
+      <div className="bg-gray-900 p-6 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 text-white overflow-hidden relative group">
+        <div className="relative z-10 flex items-center gap-5">
+          <div className="w-16 h-16 bg-[#EA1D2C] rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/20">
+            <ChefHat size={32} />
+          </div>
+          <div>
+            <h3 className="text-xl font-black tracking-tight">Painel da Cozinha</h3>
+            <p className="text-gray-400 font-medium text-sm">Abra este link em um tablet ou PC na cozinha para ver os pedidos em tempo real.</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2 w-full md:w-auto relative z-10">
+          <div className="flex-1 md:w-64 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-mono truncate">
+            {kitchenUrl}
+          </div>
+          <button 
+            onClick={copyToClipboard}
+            className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors shrink-0"
+            title="Copiar Link"
+          >
+            {copied ? <Check size={20} className="text-green-400" /> : <Copy size={20} />}
+          </button>
+          <a 
+            href="/admin/kitchen" 
+            target="_top"
+            className="p-3 bg-[#EA1D2C] hover:bg-red-600 rounded-xl transition-colors shadow-lg shadow-red-500/20 shrink-0"
+            title="Abrir Painel"
+          >
+            <ExternalLink size={20} />
+          </a>
+        </div>
+        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-64 h-64 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors"></div>
       </div>
 
       <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
