@@ -1,17 +1,10 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import config from '../../firebase-applet-config.json';
 
-// Primary configuration (User provided)
-let firebaseConfig: any = {
-  apiKey: "AIzaSyCHNKMf_fPekox3aSYsxrqA3IEAZ8yx76Y",
-  authDomain: "food-322fd.firebaseapp.com",
-  projectId: "food-322fd",
-  storageBucket: "food-322fd.firebasestorage.app",
-  messagingSenderId: "235155428006",
-  appId: "1:235155428006:web:0710085d22ebbfa2109a67",
-  firestoreDatabaseId: "(default)"
-};
+// Configuration from firebase-applet-config.json
+let firebaseConfig: any = { ...config };
 
 // Check for environment variables overrides (Vercel/Cloud Run)
 const envConfig = {

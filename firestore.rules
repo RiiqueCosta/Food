@@ -35,13 +35,11 @@ service cloud.firestore {
              data.total is number &&
              data.status in ['pending', 'preparing', 'ready', 'finished', 'canceled'] &&
              data.type in ['pickup', 'table'] &&
+             data.customer is map &&
              data.customer.name is string &&
-             data.customer.name.size() <= 100 &&
              data.customer.phone is string &&
-             data.customer.phone.size() <= 20 &&
              data.items is list &&
-             data.items.size() > 0 &&
-             data.createdAt == request.time;
+             data.items.size() > 0;
     }
 
     // --- COLEÇÕES ---

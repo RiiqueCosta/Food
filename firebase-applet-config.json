@@ -1,10 +1,9 @@
 {
-  "projectId": "vionix-finance",
-  "appId": "1:269010937122:web:2714cf0997c8e94437717b",
-  "apiKey": "AIzaSyDsu3YyrNnzWof9uVH-V4GmCY8tzLh9z8o",
-  "authDomain": "vionix-finance.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-03157068-2995-4a0a-9da8-108a9936507c",
-  "storageBucket": "vionix-finance.firebasestorage.app",
-  "messagingSenderId": "269010937122",
-  "measurementId": ""
+  "projectId": "food-322fd",
+  "appId": "1:235155428006:web:0710085d22ebbfa2109a67",
+  "apiKey": "AIzaSyCHNKMf_fPekox3aSYsxrqA3IEAZ8yx76Y",
+  "authDomain": "food-322fd.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "food-322fd.firebasestorage.app",
+  "messagingSenderId": "235155428006"
 }

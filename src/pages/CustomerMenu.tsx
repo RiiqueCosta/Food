@@ -82,24 +82,35 @@ function CustomerMenu() {
       const path = `restaurants/${restaurant.id}/orders`;
       try {
         await addDoc(collection(db, path), orderData);
-      } catch (e) {
+      } catch (e: any) {
+        console.error("Firestore AddDoc Error:", e);
         handleFirestoreError(e, OperationType.WRITE, path);
       }
       
       // WhatsApp Message Formatting
+      const rawPhone = restaurant.whatsapp.replace(/\D/g, '');
+      const cleanPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
+      
       const itemsText = items.map(i => `${i.quantity}x ${i.name}${i.observations ? `\n(Obs: ${i.observations})` : ''}`).join('\n');
       const waMessage = `━━━━━━━━━━━━━━\n🧾 NOVO PEDIDO\n\n👤 Cliente: ${customerInfo.name}\n📱 WhatsApp: ${customerInfo.phone}\n${customerInfo.type === 'table' ? `🍽️ Mesa: ${customerInfo.table}\n` : '📦 Tipo: Retirada'}\n\n📦 ITENS:\n${itemsText}\n\n💰 Total: R$ ${total.toFixed(2)}\n━━━━━━━━━━━━━━`;
       
-      const whatsappUrl = `https://api.whatsapp.com/send?phone=55${restaurant.whatsapp}&text=${encodeURIComponent(waMessage)}`;
+      const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(waMessage)}`;
       
-      window.open(whatsappUrl, '_blank');
+      const opened = window.open(whatsappUrl, '_blank');
+      if (!opened) {
+        // Fallback for blocked popups
+        const link = document.createElement('a');
+        link.href = whatsappUrl;
+        link.target = '_blank';
+        link.click();
+      }
       clearCart();
       setIsCheckoutOpen(false);
       setIsCartOpen(false);
       alert('Pedido realizado com sucesso!');
-    } catch (e) {
-      console.error(e);
-      alert('Erro ao enviar pedido.');
+    } catch (e: any) {
+      console.error("General Checkout Error:", e);
+      alert(`Erro ao enviar pedido: ${e.message || 'Erro desconhecido'}`);
     } finally {
       setOrderSending(false);
     }
