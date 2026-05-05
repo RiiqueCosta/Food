@@ -2,7 +2,7 @@ import { useRestaurant } from '../hooks/useRestaurant';
 import { useState } from 'react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Store, Plus } from 'lucide-react';
+import { Store, Plus, ClipboardList } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { restaurant, loading, createRestaurant } = useRestaurant();
@@ -93,4 +93,3 @@ export default function AdminDashboard() {
   );
 }
 
-import { ClipboardList } from 'lucide-react';
