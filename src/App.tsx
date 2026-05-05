@@ -50,9 +50,11 @@ export default function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="menu" element={<AdminMenu />} />
           <Route path="orders" element={<AdminOrders />} />
-          <Route path="kitchen" element={<KitchenView />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
+
+        {/* Standalone Kitchen View */}
+        <Route path="/admin/kitchen" element={user ? <RestaurantProvider><KitchenView /></RestaurantProvider> : <Navigate to="/login" />} />
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

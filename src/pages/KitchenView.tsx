@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useRestaurant } from '../hooks/useRestaurant';
 import { db } from '../lib/firebase';
-import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, orderBy, updateDoc, doc } from 'firebase/firestore';
 import { Order } from '../types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Clock, ChefHat, CheckCircle2, Printer, MessageCircle } from 'lucide-react';
+import { Clock, ChefHat, CheckCircle2, Printer, MessageCircle, Maximize, Minimize } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function KitchenView() {
   const { restaurant } = useRestaurant();
   const [orders, setOrders] = useState<Order[]>([]);
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     if (!restaurant) return;
@@ -41,6 +42,23 @@ export default function KitchenView() {
     return unsubscribe;
   }, [restaurant]);
 
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    }
+  };
+
+  const updateStatus = async (orderId: string, status: Order['status']) => {
+    if (!restaurant) return;
+    await updateDoc(doc(db, 'restaurants', restaurant.id, 'orders', orderId), { status });
+  };
+
   const handlePrint = (order: Order) => {
     setPrintingOrder(order);
     setTimeout(() => {
@@ -58,20 +76,20 @@ export default function KitchenView() {
   if (!restaurant) return null;
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8 overflow-hidden flex flex-col relative">
+    <div className="min-h-screen bg-gray-950 text-white p-4 md:p-8 overflow-hidden flex flex-col relative w-full h-full fixed inset-0">
       {/* Printable Receipt Area */}
       {printingOrder && (
         <div id="printable-order" className="hidden print:block p-4 text-black font-mono bg-white">
           <div className="text-center border-b border-dashed border-black pb-2 mb-2">
             <h2 className="font-bold text-xl">{restaurant.name}</h2>
-            <p className="text-xs uppercase font-bold">Cozinha - Comprovante</p>
+            <p className="text-xs uppercase font-bold text-black border-black border-2 px-2 inline-block">Cozinha - Comprovante</p>
           </div>
           
           <div className="mb-2 text-sm">
             <p className="font-bold">ORDEM: #{printingOrder.id.slice(-4).toUpperCase()}</p>
             <p>DATA: {printingOrder.createdAt?.toDate ? format(printingOrder.createdAt.toDate(), "dd/MM/yyyy HH:mm") : ''}</p>
             <p>CLIENTE: {printingOrder.customer.name}</p>
-            <p className="font-bold uppercase">LOCAL: {printingOrder.type === 'table' ? `MESA ${printingOrder.customer.table}` : 'RETIRADA'}</p>
+            <p className="font-bold uppercase border-black border px-1 inline-block">LOCAL: {printingOrder.type === 'table' ? `MESA ${printingOrder.customer.table}` : 'RETIRADA'}</p>
           </div>
 
           <div className="border-b border-dashed border-black mb-2"></div>
@@ -89,17 +107,38 @@ export default function KitchenView() {
         </div>
       )}
 
-      <header className="flex items-center justify-between mb-8 border-b border-gray-800 pb-6 shrink-0 no-print">
-        <div className="flex items-center gap-4">
-          <ChefHat size={40} className="text-[#EA1D2C]" />
+      <header className="flex items-center justify-between mb-8 border-b border-gray-800 pb-6 shrink-0 no-print px-2">
+        <div className="flex items-center gap-6">
+          <div className="w-14 h-14 bg-[#EA1D2C] rounded-2xl flex items-center justify-center shadow-lg shadow-red-600/20">
+            <ChefHat size={32} className="text-white" />
+          </div>
           <div>
-            <h1 className="text-3xl font-black uppercase tracking-tighter">Painel da Cozinha</h1>
-            <p className="text-gray-500 font-bold">{restaurant.name}</p>
+            <h1 className="text-2xl font-black tracking-tighter uppercase">{restaurant.name}</h1>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <p className="text-xs text-gray-400 font-bold uppercase tracking-widest leading-none">Cozinha Online</p>
+            </div>
           </div>
         </div>
-        <div className="text-right">
-          <p className="text-4xl font-black text-[#EA1D2C]">{orders.length}</p>
-          <p className="text-xs font-bold text-gray-500 uppercase">Pedidos Ativos</p>
+        
+        <div className="flex items-center gap-4">
+          <div className="bg-gray-800/50 px-4 py-2 rounded-xl border border-gray-700 hidden sm:block">
+            <p className="text-2xl font-black font-mono">
+              {orders.length}
+              <span className="text-xs text-gray-400 font-bold ml-2 uppercase">Pedidos</span>
+            </p>
+          </div>
+          <button 
+            onClick={toggleFullscreen}
+            className="p-3 bg-gray-800 hover:bg-gray-700 rounded-xl transition-all border border-gray-700 shadow-lg group"
+            title={isFullscreen ? "Sair da Tela Cheia" : "Tela Cheia"}
+          >
+            {isFullscreen ? (
+              <Minimize size={24} className="text-gray-300 group-hover:scale-110 transition-transform" />
+            ) : (
+              <Maximize size={24} className="text-gray-300 group-hover:scale-110 transition-transform" />
+            )}
+          </button>
         </div>
       </header>
 

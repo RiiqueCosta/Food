@@ -117,9 +117,10 @@ export default function AdminDashboard() {
           </button>
           <a 
             href="/admin/kitchen" 
-            target="_top"
+            target="_blank"
+            rel="noopener noreferrer"
             className="p-3 bg-[#EA1D2C] hover:bg-red-600 rounded-xl transition-colors shadow-lg shadow-red-500/20 shrink-0"
-            title="Abrir Painel"
+            title="Abrir Painel em Nova Aba"
           >
             <ExternalLink size={20} />
           </a>
